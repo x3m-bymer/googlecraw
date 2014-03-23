@@ -47,7 +47,7 @@
                                 type: "POST",
                                 data : { data: data },
                                 cache: false,
-                                url: "process.php",
+                                url: "backend/process.php",
                                 success: function(data){
                                     alert(data);
                                     //$("#results").html(data);

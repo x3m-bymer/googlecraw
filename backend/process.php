@@ -10,5 +10,13 @@ if(!$_POST["data"]){
     exit();
 }
 
-$arr = explode("\n", $_POST["data"]);
-var_dump($arr);
+if (!file_exists ( "new" )){
+    $res = mkdir("new", 0777);
+}
+if(!res){
+    echo "error create new directory";
+    exit();
+}
+
+file_put_contents("new/new_".time(), $_POST["data"]);
+
