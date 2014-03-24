@@ -16,6 +16,7 @@
         }
     </style>
     <link href="./ball/css/bootstrap-responsive.css" rel="stylesheet">
+
 </head>
 <body>
 
@@ -29,46 +30,32 @@
             <div class="modal hide fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h3 id="myModalLabel">Новая задача</h3>
+                    <h3 id="myModalLabel">Новая за1дача</h3>
                 </div>
                 <div class="modal-body">
                     <form action="">
                         <textarea name="" id="" cols="30" rows="10"></textarea>
                     </form>
-                    <div id="results">dsdfhhh</div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn" data-dismiss="modal" aria-hidden="true">Закрыть</button>
-                    <script>
-                        function saveTask(){
-                            var data = $('textarea').val();
-                            alert(data);
-                            $.ajax({
-                                type: "POST",
-                                data : { data: data },
-                                cache: false,
-                                url: "backend/process.php",
-                                success: function(data){
-                                    alert(data);
-                                    //$("#results").html(data);
-                                }
-                            });
-                        }
-                    </script>
-                    <button class="btn btn-primary" onclick="javascript:saveTask()">Сохранить</button>
+                    <button class="btn btn-primary" onclick="javascript:saveRequest()">Сохранить</button>
+
                 </div>
+                <div id="result" style="color: red; font-size: 12px"></div>
             </div>
         </div>
     </div>
     <div class="row">
         <div class="span12">
-            <table class="table">
+            <table class="table" id="myTable">
+                <thead>
                 <tr>
                     <th>
                         #
                     </th>
                     <th>
-                        Модуль
+                        Название файла
                     </th>
                     <th>
                         Дата создания
@@ -77,34 +64,10 @@
                         Статус
                     </th>
                 </tr>
-                <tr>
-                    <td>
-                        1
-                    </td>
-                    <td>
-                        google
-                    </td>
-                    <td>
-                        23.03.2014
-                    </td>
-                    <td>
-                        <p class="text-info">выполняется</p>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        2
-                    </td>
-                    <td>
-                        google
-                    </td>
-                    <td>
-                        23.03.2014
-                    </td>
-                    <td>
-                        <p class="text-success">сделано</p>
-                    </td>
-                </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
             </table>
         </div>
     </div>
@@ -115,6 +78,92 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="./ball/js/jquery.js"></script>
 <script src="./ball/js/bootstrap.js"></script>
+<script>
+    $( document ).ready(function() {
+        getListing(function(){
+            //alert('END');
+        });
+    });
 
+    $('#myModal').on('hidden', function () {
+        $('#result').html('');
+    })
+
+    function clearTableRows(){
+        $('#myTable tbody').find('tr').remove();
+        //$("myTable").find("tr").remove();
+    }
+    function getListing(cb){ //получить листинг директории
+        postSend({ cmd: "ls" }, function(data){
+            if(data){
+                var arr = data.split("\n");
+                var count = 0;
+                arr.forEach(function(name){
+                    if(name){
+//                        count++;
+                        addTableItem(parse_filename(name));
+                    }
+                });
+                cb();
+            }
+        });
+    }
+
+    function timeConverter(UNIX_timestamp){
+        var a = new Date(UNIX_timestamp*1000);
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var year = a.getFullYear();
+        var month = months[a.getMonth()];
+        var date = a.getDate();
+        var hour = a.getHours();
+        var min = a.getMinutes();
+        var sec = a.getSeconds();
+        var time = date+','+month+' '+year+' '+hour+':'+min+':'+sec ;
+        return time;
+    }
+
+    function parse_filename(str){
+        var w = str.split ('.');
+        var fname = w[0];
+        //alert(fname);
+        var tmp = fname.split("_");
+        var unix_timestamp = tmp[1];
+        var formattedTime = timeConverter(unix_timestamp);
+        var arr = [];
+        arr.push('');
+        arr.push('<a href="backend/new/'+str+'">'+str+'</a>');
+        arr.push(formattedTime);
+        arr.push(tmp[0]);
+        return arr;
+    }
+    function postSend(data, cb){
+        $.ajax({
+            type: "POST",
+            data : data,
+            cache: false,
+            url: "backend/process.php",
+            success: function(data){
+                cb(data);
+            }
+        });
+    }
+    function addTableItem(data){
+        var str = data.join('</td><td>');
+        $('#myTable tbody').append('<tr><td>'+str+'</td></tr>');
+    }
+    function saveRequest(){
+        var text = $('textarea').val();
+        postSend({ cmd: "new_file", data: text }, function(data){
+            if(text){
+                clearTableRows();
+                getListing(function(){
+                    $('#myModal').modal('hide');
+                });
+            } else {
+                $('#result').html('data empty');
+            }
+        });
+    }
+</script>
 </body>
 </html>
