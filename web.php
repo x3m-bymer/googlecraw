@@ -52,7 +52,7 @@
                 <thead>
                 <tr>
                     <th>
-                        #
+                        Удалить<br/><a href="#" onclick="javascript:clear_dir();">все</a><br/><a href="">выделенные</a>
                     </th>
                     <th>
                         Название файла
@@ -79,6 +79,21 @@
 <script src="./ball/js/jquery.js"></script>
 <script src="./ball/js/bootstrap.js"></script>
 <script>
+    var connection = new WebSocket('ws://html5rocks.websocket.org/echo', ['soap', 'xmpp']);
+    // When the connection is open, send some data to the server
+    connection.onopen = function () {
+        connection.send('Ping'); // Send the message 'Ping' to the server
+    };
+
+    // Log errors
+    connection.onerror = function (error) {
+        console.log('WebSocket Error ' + error);
+    };
+
+    // Log messages from the server
+    connection.onmessage = function (e) {
+        console.log('Server: ' + e.data);
+    };
     $( document ).ready(function() {
         getListing(function(){
             //alert('END');
@@ -130,7 +145,7 @@
         var unix_timestamp = tmp[1];
         var formattedTime = timeConverter(unix_timestamp);
         var arr = [];
-        arr.push('');
+        arr.push('<input type="checkbox" value="">');
         arr.push('<a href="backend/new/'+str+'">'+str+'</a>');
         arr.push(formattedTime);
         arr.push(tmp[0]);
@@ -145,6 +160,11 @@
             success: function(data){
                 cb(data);
             }
+        });
+    }
+    function clear_dir(){
+        postSend({ cmd: "clear_dir" }, function(data){
+            alert(data);
         });
     }
     function addTableItem(data){
